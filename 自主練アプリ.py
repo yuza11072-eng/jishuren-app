@@ -3,7 +3,12 @@ import datetime
 import csv
 import os
 
-st.title("自主練チェック")
+st.title("自主練チェック（日本時間）")
+
+# ===== 日本時間を取得する関数 =====
+def jst_today():
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    return datetime.datetime.now(JST).date()
 
 # ===== メニュー =====
 menus = [
@@ -18,17 +23,16 @@ menus = [
     "その他"
 ]
 
-st.write("今日の自主練をチェックしよう")
+st.write(f"今日の日付：{jst_today()}")
 
-# チェックボックス保存用
+# チェックボックス
 checks = {}
-
 for m in menus:
     checks[m] = st.checkbox(m)
 
-# ===== 保存ボタン =====
+# ===== 保存 =====
 if st.button("保存"):
-    today = datetime.date.today()  # ← ★ここで今日の日付を取る
+    today = jst_today()  # ← ★必ずここで取得（日本時間）
 
     file_name = "training_log.csv"
     file_exists = os.path.exists(file_name)
@@ -36,7 +40,6 @@ if st.button("保存"):
     with open(file_name, "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
 
-        # 初回だけヘッダーを書く
         if not file_exists:
             writer.writerow(["日付", "メニュー", "チェック"])
 
