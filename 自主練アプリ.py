@@ -3,12 +3,24 @@ import datetime
 import pandas as pd
 import os
 
-st.title("自主練チェック")
-
-# 日本時間
+# =====================
+# 日本時間の今日
+# =====================
 def jst_today():
     JST = datetime.timezone(datetime.timedelta(hours=9))
     return datetime.datetime.now(JST).date()
+
+# =====================
+# 設定
+# =====================
+st.set_page_config(
+    page_title="自主練チェック",
+    page_icon="⚽",
+    layout="centered"
+)
+
+st.markdown("## ⚽ 自主練チェック")
+st.markdown("---")
 
 menus = [
     "一回転ジャンプ",
@@ -25,42 +37,51 @@ menus = [
 today = jst_today()
 st.write(f"📅 今日：{today}")
 
+# =====================
+# チェック欄（2列）
+# =====================
+col1, col2 = st.columns(2)
 checks = {}
-for m in menus:
-    checks[m] = st.checkbox(m)
 
-FILE = "training_log.csv"
-
-# 保存
-if st.button("保存"):
-    rows = []
-    for m, c in checks.items():
-        rows.append([str(today), m, c])
-
-    df_new = pd.DataFrame(rows, columns=["日付", "メニュー", "チェック"])
-
-    if os.path.exists(FILE):
-        df_old = pd.read_csv(FILE)
-        df = pd.concat([df_old, df_new])
+for i, m in enumerate(menus):
+    if i % 2 == 0:
+        checks[m] = col1.checkbox(m)
     else:
-        df = df_new
+        checks[m] = col2.checkbox(m)
 
-    df.to_csv(FILE, index=False)
+# =====================
+# 保存
+# =====================
+file = "records.csv"
+
+if st.button("💾 保存する"):
+    done = [k for k, v in checks.items() if v]
+    count = len(done)
+
+    row = {
+        "日付": today,
+        "実施数": count,
+        "内容": "、".join(done)
+    }
+
+    if os.path.exists(file):
+        df = pd.read_csv(file)
+        df = pd.concat([pd.DataFrame([row]), df], ignore_index=True)
+    else:
+        df = pd.DataFrame([row])
+
+    df.to_csv(file, index=False)
     st.success("保存しました！")
 
-# 一覧表示
-if os.path.exists(FILE):
-    df = pd.read_csv(FILE)
-    st.subheader("📊 記録一覧")
-    st.dataframe(df)
+st.markdown("---")
 
-    # ダウンロード
-    st.download_button(
-        label="⬇ CSVをダウンロード",
-        data=df.to_csv(index=False),
-        file_name="自主練記録.csv",
-        mime="text/csv"
-    )
+# =====================
+# 記録一覧
+# =====================
+st.subheader("📋 記録一覧")
 
-# restart
-
+if os.path.exists(file):
+    df = pd.read_csv(file)
+    st.dataframe(df, use_container_width=True)
+else:
+    st.write("まだ記録がありません")
