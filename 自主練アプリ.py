@@ -1,109 +1,65 @@
 import streamlit as st
-import datetime
-import pandas as pd
-import os
+
+st.title("自主練チェック")
 
 # =====================
-# 日本時間
+# 基本メニュー
 # =====================
-def jst_today():
-    JST = datetime.timezone(datetime.timedelta(hours=9))
-    return datetime.datetime.now(JST).date()
+st.checkbox("① 一回転ジャンプ")
+
+ball = st.checkbox("▼ ② ボールコーディネーション")
+
+st.checkbox("③ ジンガ")
+st.checkbox("④ 三角ドリブル")
+st.checkbox("⑤ パンダ兄弟")
+st.checkbox("⑥ ダブルタッチ")
 
 # =====================
-# ページ設定（自動対応）
+# ボールコーディネーション中身
 # =====================
-st.set_page_config(
-    page_title="自主練チェック",
-    page_icon="⚽",
-    layout="centered"
-)
+if ball:
+    st.markdown("##### ボールコーディネーション メニュー")
 
-# =====================
-# スタイル（スマホ最優先）
-# =====================
-st.markdown("""
-<style>
-div.stButton > button {
-    width: 100%;
-    height: 3em;
-    font-size: 18px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# =====================
-# タイトル
-# =====================
-st.markdown("## ⚽ 自主練チェック")
-st.markdown("---")
-
-menus = [
-    "一回転ジャンプ",
-    "ボールコーディネーション",
-    "ジンガ",
-    "三角ドリブル",
-    "パンダ兄弟",
-    "ダブルタッチ",
-    "ストレッチ",
-    "体幹",
-    "その他"
-]
-
-today = jst_today()
-st.write(f"📅 今日：{today}")
+    st.checkbox("① 軸足通し")
+    st.checkbox("② 軸足通し（後ろ向き）")
+    st.checkbox("③ アウトプッシュ")
+    st.checkbox("④ アウトプッシュ（後ろ向き）")
+    st.checkbox("⑤ プルプッシュ")
+    st.checkbox("⑥ プルプッシュ（後ろ向き）")
+    st.checkbox("⑦ 足裏シザース")
+    st.checkbox("⑧ 足裏シザース（後ろ向き）")
+    st.checkbox("⑨ インシザース")
+    st.checkbox("⑩ インシザース（後ろ向き）")
+    st.checkbox("⑪ インイン・アウト")
+    st.checkbox("⑫ インイン・アウト（後ろ向き）")
+    st.checkbox("⑬ インインロール")
+    st.checkbox("⑭ インインロール（後ろ向き）")
+    st.checkbox("⑮ 連続エラシコ")
+    st.checkbox("⑯ 連続エラシコ（後ろ向き）")
+    st.checkbox("⑰ アウト → クライフターン")
+    st.checkbox("⑱ 足裏転がし合うターン")
+    st.checkbox("⑲ ディープジンガ")
+    st.checkbox("⑳ ディープジンガ（後ろ向き）")
+    st.checkbox("㉑ 覗き込みドリブル")
+    st.checkbox("㉒ ダブルタッチ空振り")
 
 # =====================
-# チェック（自動1列）
+# ストレッチ
 # =====================
-checks = {}
-for m in menus:
-    checks[m] = st.checkbox(m)
+stretch = st.checkbox("▼ ⑦ ストレッチ")
 
-# =====================
-# 保存
-# =====================
-file = "records.csv"
+if stretch:
+    st.markdown("##### ストレッチ内容")
 
-st.markdown("###")
-if st.button("💾 保存する"):
-    done = [k for k, v in checks.items() if v]
-
-    row = {
-        "日付": today,
-        "実施数": len(done),
-        "内容": "、".join(done)
-    }
-
-    if os.path.exists(file):
-        df = pd.read_csv(file)
-        df = pd.concat([pd.DataFrame([row]), df], ignore_index=True)
-    else:
-        df = pd.DataFrame([row])
-
-    df.to_csv(file, index=False)
-    st.success("保存しました！")
+    st.checkbox("① もも（裏・表）")
+    st.checkbox("② ふくらはぎ")
+    st.checkbox("③ 開脚")
+    st.checkbox("④ 開脚（左右）")
+    st.checkbox("⑤ 長座前屈")
+    st.checkbox("⑥ 前屈")
 
 # =====================
-# 記録一覧
+# その他
 # =====================
-st.markdown("---")
-st.subheader("📋 記録一覧")
-
-if os.path.exists(file):
-    df = pd.read_csv(file)
-    st.dataframe(df, use_container_width=True)
-else:
-    st.write("まだ記録がありません")
-
-# =====================
-# 削除（確認つき）
-# =====================
-st.markdown("---")
-st.subheader("🗑 記録の整理")
-
-if os.path.exists(file):
-    if st.checkbox("記録を削除したい（確認）"):
-        if st.button("⚠ 全記録を削除する"):
-            os.remove(file)
-            st.success("記録をすべて削除しました")
+st.checkbox("⑧ 体幹")
+st.checkbox("⑨ その他")
