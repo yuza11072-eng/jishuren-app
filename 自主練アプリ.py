@@ -3,7 +3,7 @@ import datetime
 import pandas as pd
 import os
 
-st.title("自主練チェック（日本時間・無料版）")
+st.title("自主練チェック")
 
 # 日本時間
 def jst_today():
@@ -61,3 +61,4 @@ if os.path.exists(FILE):
         file_name="自主練記録.csv",
         mime="text/csv"
     )
+
