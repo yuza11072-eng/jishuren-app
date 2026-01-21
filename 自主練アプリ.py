@@ -1,65 +1,95 @@
 import streamlit as st
+from datetime import date
 
 st.title("自主練チェック")
 
 # =====================
-# 基本メニュー
+# 保存用リストを準備
 # =====================
-st.checkbox("① 一回転ジャンプ")
+if "records" not in st.session_state:
+    st.session_state.records = []
+
+# =====================
+# チェック管理用
+# =====================
+checked_items = []
+
+def add_check(label):
+    if st.checkbox(label):
+        checked_items.append(label)
+
+# =====================
+# メニュー
+# =====================
+add_check("① 一回転ジャンプ")
 
 ball = st.checkbox("▼ ② ボールコーディネーション")
-
-st.checkbox("③ ジンガ")
-st.checkbox("④ 三角ドリブル")
-st.checkbox("⑤ パンダ兄弟")
-st.checkbox("⑥ ダブルタッチ")
-
-# =====================
-# ボールコーディネーション中身
-# =====================
 if ball:
-    st.markdown("##### ボールコーディネーション メニュー")
+    st.markdown("##### ボールコーディネーション")
+    items = [
+        "① 軸足通し","② 軸足通し（後ろ向き）",
+        "③ アウトプッシュ","④ アウトプッシュ（後ろ向き）",
+        "⑤ プルプッシュ","⑥ プルプッシュ（後ろ向き）",
+        "⑦ 足裏シザース","⑧ 足裏シザース（後ろ向き）",
+        "⑨ インシザース","⑩ インシザース（後ろ向き）",
+        "⑪ インイン・アウト","⑫ インイン・アウト（後ろ向き）",
+        "⑬ インインロール","⑭ インインロール（後ろ向き）",
+        "⑮ 連続エラシコ","⑯ 連続エラシコ（後ろ向き）",
+        "⑰ アウト→クライフターン","⑱ 足裏転がし合うターン",
+        "⑲ ディープジンガ","⑳ ディープジンガ（後ろ向き）",
+        "㉑ 覗き込みドリブル","㉒ ダブルタッチ空振り"
+    ]
+    for i in items:
+        add_check(i)
 
-    st.checkbox("① 軸足通し")
-    st.checkbox("② 軸足通し（後ろ向き）")
-    st.checkbox("③ アウトプッシュ")
-    st.checkbox("④ アウトプッシュ（後ろ向き）")
-    st.checkbox("⑤ プルプッシュ")
-    st.checkbox("⑥ プルプッシュ（後ろ向き）")
-    st.checkbox("⑦ 足裏シザース")
-    st.checkbox("⑧ 足裏シザース（後ろ向き）")
-    st.checkbox("⑨ インシザース")
-    st.checkbox("⑩ インシザース（後ろ向き）")
-    st.checkbox("⑪ インイン・アウト")
-    st.checkbox("⑫ インイン・アウト（後ろ向き）")
-    st.checkbox("⑬ インインロール")
-    st.checkbox("⑭ インインロール（後ろ向き）")
-    st.checkbox("⑮ 連続エラシコ")
-    st.checkbox("⑯ 連続エラシコ（後ろ向き）")
-    st.checkbox("⑰ アウト → クライフターン")
-    st.checkbox("⑱ 足裏転がし合うターン")
-    st.checkbox("⑲ ディープジンガ")
-    st.checkbox("⑳ ディープジンガ（後ろ向き）")
-    st.checkbox("㉑ 覗き込みドリブル")
-    st.checkbox("㉒ ダブルタッチ空振り")
-
-# =====================
-# ストレッチ
-# =====================
 stretch = st.checkbox("▼ ⑦ ストレッチ")
-
 if stretch:
-    st.markdown("##### ストレッチ内容")
+    st.markdown("##### ストレッチ")
+    stretch_items = [
+        "① もも（裏・表）",
+        "② ふくらはぎ",
+        "③ 開脚",
+        "④ 開脚（左右）",
+        "⑤ 長座前屈",
+        "⑥ 前屈"
+    ]
+    for s in stretch_items:
+        add_check(s)
 
-    st.checkbox("① もも（裏・表）")
-    st.checkbox("② ふくらはぎ")
-    st.checkbox("③ 開脚")
-    st.checkbox("④ 開脚（左右）")
-    st.checkbox("⑤ 長座前屈")
-    st.checkbox("⑥ 前屈")
+add_check("⑧ 体幹")
+add_check("⑨ その他")
 
 # =====================
-# その他
+# 保存エリア
 # =====================
-st.checkbox("⑧ 体幹")
-st.checkbox("⑨ その他")
+st.divider()
+st.subheader("💾 自主練を保存")
+
+memo = st.text_input("メモ（例：疲れたけど調子良かった）")
+
+if st.button("今日の自主練を保存"):
+    if checked_items:
+        record = {
+            "日付": date.today().strftime("%Y-%m-%d"),
+            "内容": checked_items.copy(),
+            "メモ": memo
+        }
+        st.session_state.records.append(record)
+        st.success("保存しました！💪")
+    else:
+        st.warning("チェックが1つもありません")
+
+# =====================
+# 記録一覧
+# =====================
+st.divider()
+st.subheader("📋 自主練の記録")
+
+if st.session_state.records:
+    for i, r in enumerate(reversed(st.session_state.records), 1):
+        st.markdown(f"### {i}. {r['日付']}")
+        st.write("・" + " / ".join(r["内容"]))
+        if r["メモ"]:
+            st.write(f"📝 {r['メモ']}")
+else:
+    st.write("まだ保存された記録はありません")
