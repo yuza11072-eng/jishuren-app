@@ -1,16 +1,15 @@
 import streamlit as st
 import datetime
-import gspread
-from google.oauth2.service_account import Credentials
+import pandas as pd
+import os
 
-st.title("自主練チェック")
+st.title("自主練チェック（日本時間・無料版）")
 
-# ===== 日本時間 =====
+# 日本時間
 def jst_today():
     JST = datetime.timezone(datetime.timedelta(hours=9))
     return datetime.datetime.now(JST).date()
 
-# ===== メニュー =====
 menus = [
     "一回転ジャンプ",
     "ボールコーディネーション",
@@ -23,42 +22,42 @@ menus = [
     "その他"
 ]
 
-# ===== Google Sheets 接続 =====
-scope = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
-
-credentials = Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"],
-    scopes=scope
-)
-
-gc = gspread.authorize(credentials)
-sheet = gc.open("自主練記録").sheet1   # ← シート名
-
-# ===== 今日の日付表示 =====
 today = jst_today()
-st.subheader(f"📅 今日：{today}")
+st.write(f"📅 今日：{today}")
 
-# ===== チェック =====
 checks = {}
 for m in menus:
     checks[m] = st.checkbox(m)
 
-# ===== 保存 =====
-if st.button("保存"):
-    for menu, checked in checks.items():
-        sheet.append_row([str(today), menu, checked])
+FILE = "training_log.csv"
 
+# 保存
+if st.button("保存"):
+    rows = []
+    for m, c in checks.items():
+        rows.append([str(today), m, c])
+
+    df_new = pd.DataFrame(rows, columns=["日付", "メニュー", "チェック"])
+
+    if os.path.exists(FILE):
+        df_old = pd.read_csv(FILE)
+        df = pd.concat([df_old, df_new])
+    else:
+        df = df_new
+
+    df.to_csv(FILE, index=False)
     st.success("保存しました！")
 
-# ===== 一覧表示 =====
-st.subheader("📊 記録一覧")
+# 一覧表示
+if os.path.exists(FILE):
+    df = pd.read_csv(FILE)
+    st.subheader("📊 記録一覧")
+    st.dataframe(df)
 
-records = sheet.get_all_records()
-
-if records:
-    st.dataframe(records)
-else:
-    st.info("まだ記録がありません")
+    # ダウンロード
+    st.download_button(
+        label="⬇ CSVをダウンロード",
+        data=df.to_csv(index=False),
+        file_name="自主練記録.csv",
+        mime="text/csv"
+    )
