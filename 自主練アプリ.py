@@ -11,7 +11,7 @@ def jst_today():
     return datetime.datetime.now(JST).date()
 
 # =====================
-# 設定
+# ページ設定（スマホ対応）
 # =====================
 st.set_page_config(
     page_title="自主練チェック",
@@ -19,9 +19,28 @@ st.set_page_config(
     layout="centered"
 )
 
+# =====================
+# スタイル（スマホ用）
+# =====================
+st.markdown("""
+<style>
+div.stButton > button {
+    width: 100%;
+    height: 3em;
+    font-size: 18px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# =====================
+# タイトル
+# =====================
 st.markdown("## ⚽ 自主練チェック")
 st.markdown("---")
 
+# =====================
+# メニュー
+# =====================
 menus = [
     "一回転ジャンプ",
     "ボールコーディネーション",
@@ -38,29 +57,46 @@ today = jst_today()
 st.write(f"📅 今日：{today}")
 
 # =====================
-# チェック欄（2列）
+# 表示切り替え（PC / スマホ）
 # =====================
-col1, col2 = st.columns(2)
+if "mobile" not in st.session_state:
+    st.session_state["mobile"] = False
+
+if st.button("📱 スマホ表示に切り替え"):
+    st.session_state["mobile"] = not st.session_state["mobile"]
+
+st.markdown("---")
+
+# =====================
+# チェック欄
+# =====================
 checks = {}
 
-for i, m in enumerate(menus):
-    if i % 2 == 0:
-        checks[m] = col1.checkbox(m)
-    else:
-        checks[m] = col2.checkbox(m)
+if st.session_state["mobile"]:
+    # スマホ：1列
+    for m in menus:
+        checks[m] = st.checkbox(m)
+else:
+    # PC：2列
+    col1, col2 = st.columns(2)
+    for i, m in enumerate(menus):
+        if i % 2 == 0:
+            checks[m] = col1.checkbox(m)
+        else:
+            checks[m] = col2.checkbox(m)
 
 # =====================
-# 保存
+# 保存処理
 # =====================
 file = "records.csv"
 
+st.markdown("###")
 if st.button("💾 保存する"):
     done = [k for k, v in checks.items() if v]
-    count = len(done)
 
     row = {
         "日付": today,
-        "実施数": count,
+        "実施数": len(done),
         "内容": "、".join(done)
     }
 
@@ -73,11 +109,10 @@ if st.button("💾 保存する"):
     df.to_csv(file, index=False)
     st.success("保存しました！")
 
-st.markdown("---")
-
 # =====================
 # 記録一覧
 # =====================
+st.markdown("---")
 st.subheader("📋 記録一覧")
 
 if os.path.exists(file):
@@ -85,3 +120,15 @@ if os.path.exists(file):
     st.dataframe(df, use_container_width=True)
 else:
     st.write("まだ記録がありません")
+
+# =====================
+# 削除（確認つき）
+# =====================
+st.markdown("---")
+st.subheader("🗑 記録の整理")
+
+if os.path.exists(file):
+    if st.checkbox("記録を削除したい（確認）"):
+        if st.button("⚠ 全記録を削除する"):
+            os.remove(file)
+            st.success("記録をすべて削除しました")
