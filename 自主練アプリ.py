@@ -11,7 +11,7 @@ def jst_today():
     return datetime.datetime.now(JST).date()
 
 # =====================
-# ページ設定（スマホ対応）
+# ページ設定（PC / スマホ対応）
 # =====================
 st.set_page_config(
     page_title="自主練チェック",
@@ -20,7 +20,7 @@ st.set_page_config(
 )
 
 # =====================
-# スタイル（スマホ用）
+# スマホ向けスタイル
 # =====================
 st.markdown("""
 <style>
@@ -57,13 +57,17 @@ today = jst_today()
 st.write(f"📅 今日：{today}")
 
 # =====================
-# 表示切り替え（PC / スマホ）
+# 表示モード管理（トグル）
 # =====================
 if "mobile" not in st.session_state:
     st.session_state["mobile"] = False
 
-if st.button("📱 スマホ表示に切り替え"):
-    st.session_state["mobile"] = not st.session_state["mobile"]
+if st.session_state["mobile"]:
+    if st.button("💻 パソコン表示に切り替え"):
+        st.session_state["mobile"] = False
+else:
+    if st.button("📱 スマホ表示に切り替え"):
+        st.session_state["mobile"] = True
 
 st.markdown("---")
 
@@ -77,7 +81,7 @@ if st.session_state["mobile"]:
     for m in menus:
         checks[m] = st.checkbox(m)
 else:
-    # PC：2列
+    # パソコン：2列
     col1, col2 = st.columns(2)
     for i, m in enumerate(menus):
         if i % 2 == 0:
@@ -122,7 +126,7 @@ else:
     st.write("まだ記録がありません")
 
 # =====================
-# 削除（確認つき）
+# 削除（安全・確認つき）
 # =====================
 st.markdown("---")
 st.subheader("🗑 記録の整理")
