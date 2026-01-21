@@ -4,14 +4,14 @@ import pandas as pd
 import os
 
 # =====================
-# 日本時間の今日
+# 日本時間
 # =====================
 def jst_today():
     JST = datetime.timezone(datetime.timedelta(hours=9))
     return datetime.datetime.now(JST).date()
 
 # =====================
-# ページ設定（PC / スマホ対応）
+# ページ設定（自動対応）
 # =====================
 st.set_page_config(
     page_title="自主練チェック",
@@ -20,7 +20,7 @@ st.set_page_config(
 )
 
 # =====================
-# スマホ向けスタイル
+# スタイル（スマホ最優先）
 # =====================
 st.markdown("""
 <style>
@@ -38,9 +38,6 @@ div.stButton > button {
 st.markdown("## ⚽ 自主練チェック")
 st.markdown("---")
 
-# =====================
-# メニュー
-# =====================
 menus = [
     "一回転ジャンプ",
     "ボールコーディネーション",
@@ -57,40 +54,14 @@ today = jst_today()
 st.write(f"📅 今日：{today}")
 
 # =====================
-# 表示モード管理（トグル）
-# =====================
-if "mobile" not in st.session_state:
-    st.session_state["mobile"] = False
-
-if st.session_state["mobile"]:
-    if st.button("💻 パソコン表示に切り替え"):
-        st.session_state["mobile"] = False
-else:
-    if st.button("📱 スマホ表示に切り替え"):
-        st.session_state["mobile"] = True
-
-st.markdown("---")
-
-# =====================
-# チェック欄
+# チェック（自動1列）
 # =====================
 checks = {}
-
-if st.session_state["mobile"]:
-    # スマホ：1列
-    for m in menus:
-        checks[m] = st.checkbox(m)
-else:
-    # パソコン：2列
-    col1, col2 = st.columns(2)
-    for i, m in enumerate(menus):
-        if i % 2 == 0:
-            checks[m] = col1.checkbox(m)
-        else:
-            checks[m] = col2.checkbox(m)
+for m in menus:
+    checks[m] = st.checkbox(m)
 
 # =====================
-# 保存処理
+# 保存
 # =====================
 file = "records.csv"
 
@@ -126,7 +97,7 @@ else:
     st.write("まだ記録がありません")
 
 # =====================
-# 削除（安全・確認つき）
+# 削除（確認つき）
 # =====================
 st.markdown("---")
 st.subheader("🗑 記録の整理")
