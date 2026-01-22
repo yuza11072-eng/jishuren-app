@@ -9,12 +9,12 @@ st.title("自主練チェック")
 if "records" not in st.session_state:
     st.session_state.records = []
 
-def init_check(key):
+def init(key):
     if key not in st.session_state:
         st.session_state[key] = False
 
 # =====================
-# メニュー定義
+# メニュー
 # =====================
 ball_items = [
     "軸足通し","軸足通し（後ろ向き）",
@@ -41,56 +41,44 @@ stretch_items = [
     "前屈"
 ]
 
-# =====================
-# チェック初期化
-# =====================
 for i in ball_items:
-    init_check("ball_" + i)
-
+    init("ball_" + i)
 for s in stretch_items:
-    init_check("stretch_" + s)
+    init("stretch_" + s)
 
 checked = []
 
 # =====================
-# メニュー表示
+# メインメニュー
 # =====================
 if st.checkbox("① 一回転ジャンプ"):
     checked.append("一回転ジャンプ")
 
 # ---------- ボールコーディネーション ----------
-ball_all = st.checkbox("② ボールコーディネーション ▼")
+ball_all = st.checkbox("② ボールコーディネーション（全部やった）")
 
 if ball_all:
     for i in ball_items:
         st.session_state["ball_" + i] = True
-else:
-    for i in ball_items:
-        st.session_state["ball_" + i] = False
 
-if ball_all:
-    st.markdown("### ▼ ボールコーディネーション")
+with st.expander("▼ ボールコーディネーション メニュー"):
     for i in ball_items:
         if st.checkbox(i, key="ball_" + i):
             checked.append(i)
 
-# ---------- 単独メニュー ----------
+# ---------- 単体 ----------
 for m in ["③ ジンガ","④ 三角ドリブル","⑤ パンダ兄弟","⑥ ダブルタッチ"]:
     if st.checkbox(m):
         checked.append(m)
 
 # ---------- ストレッチ ----------
-stretch_all = st.checkbox("⑦ ストレッチ ▼")
+stretch_all = st.checkbox("⑦ ストレッチ（全部やった）")
 
 if stretch_all:
     for s in stretch_items:
         st.session_state["stretch_" + s] = True
-else:
-    for s in stretch_items:
-        st.session_state["stretch_" + s] = False
 
-if stretch_all:
-    st.markdown("### ▼ ストレッチ")
+with st.expander("▼ ストレッチ メニュー"):
     for s in stretch_items:
         if st.checkbox(s, key="stretch_" + s):
             checked.append(s)
@@ -98,7 +86,6 @@ if stretch_all:
 # ---------- 残り ----------
 if st.checkbox("⑧ 体幹"):
     checked.append("体幹")
-
 if st.checkbox("⑨ その他"):
     checked.append("その他")
 
@@ -117,10 +104,10 @@ if st.button("今日の自主練を保存"):
         })
         st.success("保存しました！")
     else:
-        st.warning("何もチェックされていません")
+        st.warning("チェックがありません")
 
 # =====================
-# 記録一覧
+# 記録表示
 # =====================
 st.divider()
 st.subheader("📋 自主練の記録")
