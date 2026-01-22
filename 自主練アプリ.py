@@ -42,7 +42,7 @@ stretch_items = [
 ]
 
 # =====================
-# チェック状態初期化
+# チェック初期化
 # =====================
 for i in ball_items:
     init_check("ball_" + i)
@@ -59,7 +59,7 @@ if st.checkbox("① 一回転ジャンプ"):
     checked.append("一回転ジャンプ")
 
 # ---------- ボールコーディネーション ----------
-ball_all = st.checkbox("② ボールコーディネーション")
+ball_all = st.checkbox("② ボールコーディネーション ▼")
 
 if ball_all:
     for i in ball_items:
@@ -69,7 +69,7 @@ else:
         st.session_state["ball_" + i] = False
 
 if ball_all:
-    st.markdown("##### ボールコーディネーション")
+    st.markdown("### ▼ ボールコーディネーション")
     for i in ball_items:
         if st.checkbox(i, key="ball_" + i):
             checked.append(i)
@@ -80,7 +80,7 @@ for m in ["③ ジンガ","④ 三角ドリブル","⑤ パンダ兄弟","⑥ �
         checked.append(m)
 
 # ---------- ストレッチ ----------
-stretch_all = st.checkbox("⑦ ストレッチ")
+stretch_all = st.checkbox("⑦ ストレッチ ▼")
 
 if stretch_all:
     for s in stretch_items:
@@ -90,7 +90,7 @@ else:
         st.session_state["stretch_" + s] = False
 
 if stretch_all:
-    st.markdown("##### ストレッチ")
+    st.markdown("### ▼ ストレッチ")
     for s in stretch_items:
         if st.checkbox(s, key="stretch_" + s):
             checked.append(s)
