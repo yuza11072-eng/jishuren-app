@@ -115,23 +115,29 @@ if st.button("💾 今日の自主練を保存"):
                 " / ".join(checked),
                 memo
             ])
-        st.success("保存しました（アプリを閉じても残ります）")
+        st.success("保存しました（消えません）")
     else:
         st.warning("チェックがありません")
 
 # =====================
-# 記録表示 & 削除
+# 記録表示（EmptyDataError対策済）
 # =====================
 st.divider()
 st.subheader("📊 自主練記録（Excel形式）")
 
-if os.path.exists(FILENAME):
-    df = pd.read_csv(FILENAME)
+df = None
+if os.path.exists(FILENAME) and os.path.getsize(FILENAME) > 0:
+    try:
+        df = pd.read_csv(FILENAME)
+    except pd.errors.EmptyDataError:
+        df = None
 
-    # 個別削除チェック
+if df is not None and not df.empty:
+    # 削除チェック初期化
     for i in range(len(df)):
         init(f"del_{i}")
 
+    # チェック表示
     for i, row in df.iterrows():
         st.checkbox(
             f"{row['日付']}｜{row['内容']}",
@@ -165,6 +171,5 @@ if os.path.exists(FILENAME):
             st.session_state.confirm_all_delete = False
             st.success("全記録を削除しました")
             st.experimental_rerun()
-
 else:
     st.write("まだ記録はありません")
