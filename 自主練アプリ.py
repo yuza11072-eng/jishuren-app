@@ -4,18 +4,20 @@ import csv
 import os
 import pandas as pd
 
+st.set_page_config(page_title="自主練チェック", layout="wide")
 st.title("自主練チェック")
 
 FILENAME = "自主練記録.csv"
 
 # =====================
-# 初期化
+# セッション初期化
 # =====================
 def init(key, value=False):
     if key not in st.session_state:
         st.session_state[key] = value
 
 init("delete_mode", False)
+init("confirm_all_delete", False)
 
 # =====================
 # メニュー定義
@@ -53,11 +55,12 @@ for s in stretch_items:
 checked = []
 
 # =====================
-# チェック欄
+# チェック入力
 # =====================
 if st.checkbox("① 一回転ジャンプ"):
     checked.append("一回転ジャンプ")
 
+# ---- ② ボールコーディネーション
 ball_all = st.checkbox("② ボールコーディネーション（全部やった）")
 if ball_all:
     for i in ball_items:
@@ -68,13 +71,16 @@ with st.expander("▼ ボールコーディネーション"):
         if st.checkbox(i, key="ball_" + i):
             checked.append(i)
 
+# ---- ③〜⑥
 for m in ["③ ジンガ", "④ 三角ドリブル", "⑤ パンダ兄弟", "⑥ ダブルタッチ"]:
     if st.checkbox(m):
         checked.append(m)
 
+# ---- ⑦ 左足
 if st.checkbox("⑦ 左足"):
     checked.append("左足")
 
+# ---- ⑧ ストレッチ
 stretch_all = st.checkbox("⑧ ストレッチ（全部やった）")
 if stretch_all:
     for s in stretch_items:
@@ -85,6 +91,7 @@ with st.expander("▼ ストレッチ"):
         if st.checkbox(s, key="stretch_" + s):
             checked.append(s)
 
+# ---- ⑨⑩
 if st.checkbox("⑨ 体幹"):
     checked.append("体幹")
 if st.checkbox("⑩ その他"):
@@ -96,7 +103,7 @@ if st.checkbox("⑩ その他"):
 st.divider()
 memo = st.text_input("メモ（任意）")
 
-if st.button("今日の自主練を保存"):
+if st.button("💾 今日の自主練を保存"):
     if checked:
         file_exists = os.path.exists(FILENAME)
         with open(FILENAME, "a", newline="", encoding="utf-8") as f:
@@ -108,35 +115,32 @@ if st.button("今日の自主練を保存"):
                 " / ".join(checked),
                 memo
             ])
-        st.success("保存しました（消えません）")
+        st.success("保存しました（アプリを閉じても残ります）")
     else:
         st.warning("チェックがありません")
 
 # =====================
-# 記録表示（Excel形式）
+# 記録表示 & 削除
 # =====================
 st.divider()
-st.subheader("📊 自主練記録")
+st.subheader("📊 自主練記録（Excel形式）")
 
 if os.path.exists(FILENAME):
     df = pd.read_csv(FILENAME)
 
-    # 削除用チェック列
-    delete_checks = []
+    # 個別削除チェック
     for i in range(len(df)):
         init(f"del_{i}")
-        delete_checks.append(
-            st.checkbox(
-                f"{df.loc[i,'日付']}｜{df.loc[i,'内容']}",
-                key=f"del_{i}"
-            )
+
+    for i, row in df.iterrows():
+        st.checkbox(
+            f"{row['日付']}｜{row['内容']}",
+            key=f"del_{i}"
         )
 
     st.dataframe(df, use_container_width=True)
 
-    # =====================
-    # 削除（2段階）
-    # =====================
+    # ---- 個別削除（二段階）
     if st.button("🗑 チェックした記録を削除"):
         if not st.session_state.delete_mode:
             st.session_state.delete_mode = True
@@ -150,13 +154,17 @@ if os.path.exists(FILENAME):
             st.success("削除しました")
             st.experimental_rerun()
 
-    # =====================
-    # 全消し
-    # =====================
+    # ---- 全消し（二段階・安全）
     if st.button("⚠️ 記録をすべて削除"):
-        os.remove(FILENAME)
-        st.success("全記録を削除しました")
-        st.experimental_rerun()
+        if not st.session_state.confirm_all_delete:
+            st.session_state.confirm_all_delete = True
+            st.warning("もう一度押すと【全削除】されます")
+        else:
+            if os.path.exists(FILENAME):
+                os.remove(FILENAME)
+            st.session_state.confirm_all_delete = False
+            st.success("全記録を削除しました")
+            st.experimental_rerun()
 
 else:
     st.write("まだ記録はありません")
