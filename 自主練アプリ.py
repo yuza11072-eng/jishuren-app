@@ -1,175 +1,117 @@
 import streamlit as st
-from datetime import date
-import csv
-import os
 import pandas as pd
+import os
+from datetime import datetime
 
-st.set_page_config(page_title="自主練チェック", layout="wide")
-st.title("自主練チェック")
+FILENAME = "jishuren_data.csv"
 
-FILENAME = "自主練記録.csv"
+# ===============================
+# CSV 安全読み込み
+# ===============================
+def load_data():
+    if not os.path.exists(FILENAME) or os.path.getsize(FILENAME) == 0:
+        return pd.DataFrame(columns=["日付", "内容"])
 
-# =====================
-# セッション初期化
-# =====================
-def init(key, value=False):
-    if key not in st.session_state:
-        st.session_state[key] = value
+    try:
+        df = pd.read_csv(FILENAME)
+        if "日付" not in df.columns or "内容" not in df.columns:
+            return pd.DataFrame(columns=["日付", "内容"])
+        return df
+    except:
+        return pd.DataFrame(columns=["日付", "内容"])
 
-init("delete_mode", False)
-init("confirm_all_delete", False)
+# ===============================
+# データ保存
+# ===============================
+def save_data(df):
+    df.to_csv(FILENAME, index=False)
 
-# =====================
-# メニュー定義
-# =====================
-ball_items = [
-    "軸足通し","軸足通し（後ろ向き）",
-    "アウトプッシュ","アウトプッシュ（後ろ向き）",
-    "プルプッシュ","プルプッシュ（後ろ向き）",
-    "足裏シザース","足裏シザース（後ろ向き）",
-    "インシザース","インシザース（後ろ向き）",
-    "インイン・アウト","インイン・アウト（後ろ向き）",
-    "インインロール","インインロール（後ろ向き）",
-    "連続エラシコ","連続エラシコ（後ろ向き）",
-    "アウト→クライフターン",
-    "足裏転がし合うターン",
-    "ディープジンガ","ディープジンガ（後ろ向き）",
-    "覗き込みドリブル",
-    "ダブルタッチ空振り"
-]
+# ===============================
+# UI
+# ===============================
+st.set_page_config(page_title="自主練チェック", layout="centered")
+st.title("⚽ 自主練チェックアプリ")
 
-stretch_items = [
-    "もも（裏・表）",
-    "ふくらはぎ",
-    "開脚",
-    "開脚（左右）",
-    "長座前屈",
-    "前屈"
-]
+df = load_data()
 
-for i in ball_items:
-    init("ball_" + i)
-for s in stretch_items:
-    init("stretch_" + s)
+st.subheader("📌 今日の自主練")
+
+menu = {
+    "① 一回転ジャンプ": False,
+    "② ボールコーディネーション": False,
+    "③ ジンガ": False,
+    "④ 三角ドリブル": False,
+    "⑤ パンダ兄弟": False,
+    "⑥ ダブルタッチ": False,
+    "⑦ 左足": False,
+    "⑧ ストレッチ": False,
+    "⑨ 体幹": False,
+    "⑩ その他": False
+}
 
 checked = []
 
-# =====================
-# チェック入力
-# =====================
-if st.checkbox("① 一回転ジャンプ"):
-    checked.append("一回転ジャンプ")
+for k in menu:
+    if st.checkbox(k):
+        checked.append(k)
 
-# ---- ② ボールコーディネーション
-ball_all = st.checkbox("② ボールコーディネーション（全部やった）")
-if ball_all:
-    for i in ball_items:
-        st.session_state["ball_" + i] = True
+note = st.text_input("✏️ メモ（任意）")
 
-with st.expander("▼ ボールコーディネーション"):
-    for i in ball_items:
-        if st.checkbox(i, key="ball_" + i):
-            checked.append(i)
-
-# ---- ③〜⑥
-for m in ["③ ジンガ", "④ 三角ドリブル", "⑤ パンダ兄弟", "⑥ ダブルタッチ"]:
-    if st.checkbox(m):
-        checked.append(m)
-
-# ---- ⑦ 左足
-if st.checkbox("⑦ 左足"):
-    checked.append("左足")
-
-# ---- ⑧ ストレッチ
-stretch_all = st.checkbox("⑧ ストレッチ（全部やった）")
-if stretch_all:
-    for s in stretch_items:
-        st.session_state["stretch_" + s] = True
-
-with st.expander("▼ ストレッチ"):
-    for s in stretch_items:
-        if st.checkbox(s, key="stretch_" + s):
-            checked.append(s)
-
-# ---- ⑨⑩
-if st.checkbox("⑨ 体幹"):
-    checked.append("体幹")
-if st.checkbox("⑩ その他"):
-    checked.append("その他")
-
-# =====================
+# ===============================
 # 保存
-# =====================
-st.divider()
-memo = st.text_input("メモ（任意）")
-
-if st.button("💾 今日の自主練を保存"):
+# ===============================
+if st.button("💾 記録する"):
     if checked:
-        file_exists = os.path.exists(FILENAME)
-        with open(FILENAME, "a", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            if not file_exists:
-                writer.writerow(["日付", "内容", "メモ"])
-            writer.writerow([
-                date.today().strftime("%Y-%m-%d"),
-                " / ".join(checked),
-                memo
-            ])
-        st.success("保存しました（消えません）")
+        text = " / ".join(checked)
+        if note:
+            text += f"｜{note}"
+
+        new = pd.DataFrame([{
+            "日付": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "内容": text
+        }])
+
+        df = pd.concat([df, new], ignore_index=True)
+        save_data(df)
+        st.success("保存完了！")
+        st.experimental_rerun()
     else:
-        st.warning("チェックがありません")
+        st.warning("最低1つはチェックしてね")
 
-# =====================
-# 記録表示（EmptyDataError対策済）
-# =====================
+# ===============================
+# 記録表示
+# ===============================
+st.subheader("📒 記録一覧")
+
+df = load_data()
+
+delete_indexes = []
+
+for i, row in df.iterrows():
+    col1, col2 = st.columns([0.15, 0.85])
+    with col1:
+        if st.checkbox("削除", key=f"del_{i}"):
+            delete_indexes.append(i)
+    with col2:
+        st.write(f"{row['日付']}｜{row['内容']}")
+
+# ===============================
+# 個別削除
+# ===============================
+if st.button("🗑️ チェックした記録を削除"):
+    if delete_indexes:
+        df = df.drop(delete_indexes).reset_index(drop=True)
+        save_data(df)
+        st.success("削除完了")
+        st.experimental_rerun()
+    else:
+        st.info("削除チェックがありません")
+
+# ===============================
+# 全消去
+# ===============================
 st.divider()
-st.subheader("📊 自主練記録（Excel形式）")
-
-df = None
-if os.path.exists(FILENAME) and os.path.getsize(FILENAME) > 0:
-    try:
-        df = pd.read_csv(FILENAME)
-    except pd.errors.EmptyDataError:
-        df = None
-
-if df is not None and not df.empty:
-    # 削除チェック初期化
-    for i in range(len(df)):
-        init(f"del_{i}")
-
-    # チェック表示
-    for i, row in df.iterrows():
-        st.checkbox(
-            f"{row['日付']}｜{row['内容']}",
-            key=f"del_{i}"
-        )
-
-    st.dataframe(df, use_container_width=True)
-
-    # ---- 個別削除（二段階）
-    if st.button("🗑 チェックした記録を削除"):
-        if not st.session_state.delete_mode:
-            st.session_state.delete_mode = True
-            st.warning("もう一度押すと削除されます")
-        else:
-            new_df = df[[not st.session_state[f"del_{i}"] for i in range(len(df))]]
-            new_df.to_csv(FILENAME, index=False)
-            for i in range(len(df)):
-                st.session_state[f"del_{i}"] = False
-            st.session_state.delete_mode = False
-            st.success("削除しました")
-            st.experimental_rerun()
-
-    # ---- 全消し（二段階・安全）
-    if st.button("⚠️ 記録をすべて削除"):
-        if not st.session_state.confirm_all_delete:
-            st.session_state.confirm_all_delete = True
-            st.warning("もう一度押すと【全削除】されます")
-        else:
-            if os.path.exists(FILENAME):
-                os.remove(FILENAME)
-            st.session_state.confirm_all_delete = False
-            st.success("全記録を削除しました")
-            st.experimental_rerun()
-else:
-    st.write("まだ記録はありません")
+if st.button("🔥 全消去（完全リセット）"):
+    pd.DataFrame(columns=["日付", "内容"]).to_csv(FILENAME, index=False)
+    st.success("全削除完了")
+    st.experimental_rerun()
